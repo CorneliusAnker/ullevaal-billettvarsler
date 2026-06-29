@@ -112,9 +112,67 @@ git-ignorert.
 Scriptet ber automatisk Windows om å **holde systemet våkent** så lenge det kjører
 (`PREVENT_SLEEP` i config, på som standard) — så maskinen sovner ikke fra deg midt i
 overvåkingen. Skjermen kan fortsatt slå seg av; scriptet kjører videre uansett. Vinduet
-må likevel stå åpent. Siden målsiden er statisk, kan en skyhostet variant settes opp senere
-(f.eks. en `cron`-jobb som kjører `python monitor.py --once` hvert minutt på en liten
-server). Da slipper du å holde PC-en på.
+må likevel stå åpent.
+
+Vil du slippe å ha PC-en på i det hele tatt? Se neste seksjon — kjør den i GitHubs sky.
+
+## Kjøre i skyen (GitHub Actions) — uten at PC-en din står på
+
+Repoet inneholder en ferdig workflow ([`.github/workflows/monitor.yml`](.github/workflows/monitor.yml))
+som kjører `python monitor.py --ci-check` **hvert 5. minutt** gratis i GitHubs sky.
+Den husker forrige status i fila `state/last_status.txt` (committes automatisk) og
+varsler via **ntfy** når statussetningen endrer seg.
+
+> ⚠️ I skyen finnes ingen skjerm eller høyttaler — så toast og lyd funker *ikke* der.
+> Du **må** bruke ntfy (mobil-app eller bare `https://ntfy.sh/DITT-TOPIC` i en
+> nettleserfane).
+
+### Oppsett, steg for steg
+
+1. **Lag et GitHub-repo og push koden.** Enten via [github.com/new](https://github.com/new),
+   eller med GitHub CLI. Deretter, i prosjektmappa:
+
+   ```bash
+   git remote add origin https://github.com/DITT-BRUKERNAVN/REPO-NAVN.git
+   git push -u origin master
+   ```
+
+   > 💡 Gjør gjerne repoet **public** — da er GitHub Actions helt gratis og uten
+   > tidsgrense. (Private repo har en månedlig gratiskvote som et 5-min-intervall
+   > spiser fort.) Det ligger ingenting hemmelig i koden; topic-navnet lagres som
+   > en Secret, ikke i koden.
+
+2. **Velg et hemmelig ntfy-topic** (f.eks. `ullevaal-billett-7Kq39xZ`) og legg det inn
+   som en **Secret**: repoet → *Settings* → *Secrets and variables* → *Actions* →
+   *New repository secret*. Navn: `NTFY_TOPIC`, verdi: ditt topic.
+
+3. **Gi workflowen skrive-tilgang** (så den kan lagre status): *Settings* → *Actions*
+   → *General* → *Workflow permissions* → velg **Read and write permissions** → *Save*.
+
+4. **Abonner på samme topic** — enten i ntfy-appen, eller åpne `https://ntfy.sh/DITT-TOPIC`
+   i en nettleserfane og la den stå.
+
+5. **Ferdig.** Workflowen starter av seg selv. Vil du teste den med en gang: repoet →
+   *Actions* → *Billettovervaaking* → *Run workflow*. Første kjøring etablerer bare
+   utgangspunktet (ingen varsel); deretter varsler den ved endring.
+
+### Verdt å vite
+
+- **Intervall ~5 min:** GitHub tillater ikke tettere planlagte jobber, og kan av og til
+  forsinke dem noen minutter under høy last. For et billettsalg som varer i timer/dager
+  er det helt fint, men det er litt tregere enn PC-versjonen (60 sek).
+- **Belte og bukseseler:** du kan kjøre PC-versjonen *og* skyversjonen samtidig — da har
+  du PC-varsel (rask) og ntfy (uansett om PC-en er på).
+- **Husk å skru av etterpå:** når du har fått billetter, deaktiver workflowen
+  (*Actions* → *Billettovervaaking* → *⋯* → *Disable workflow*) så den ikke kjører i evig tid.
+
+### En enklere cron (egen server) som alternativ
+
+Har du en alltid-på server/VPS, kan du droppe GitHub og bare legge inn i `crontab`:
+
+```cron
+*/5 * * * * cd /sti/til/prosjekt && NTFY_TOPIC=ditt-topic NOTIFY_NTFY=true python3 monitor.py --ci-check
+```
 
 ## Feilsøking
 

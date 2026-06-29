@@ -1,0 +1,55 @@
+name: Billettovervaaking
+
+# Kjorer i GitHubs sky slik at PC-en din ikke trenger a sta paa.
+on:
+  schedule:
+    # Hvert 5. minutt. (GitHub tillater ikke tettere enn ~5 min, og kan av og til
+    # forsinke planlagte jobber noen minutter under hoy last.)
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}   # gjor det mulig a kjore manuelt fra Actions-fanen
+
+# Ikke kjor to sjekker oppa hverandre (de deler statusfila).
+concurrency:
+  group: billettovervaaking
+  cancel-in-progress: false
+
+# Trengs for at jobben kan committe oppdatert status tilbake til repoet.
+permissions:
+  contents: write
+
+jobs:
+  sjekk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hent koden
+        uses: actions/checkout@v4
+
+      - name: Sett opp Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Installer avhengigheter
+        run: pip install -r requirements.txt
+
+      - name: Sjekk billettstatus
+        env:
+          # NTFY_TOPIC settes som en "Secret" i repo-innstillingene (se README).
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          # I skyen finnes ingen skjerm/hoyttaler -> kun ntfy.
+          NOTIFY_NTFY: "true"
+          NOTIFY_TOAST: "false"
+          NOTIFY_SOUND: "false"
+        run: python monitor.py --ci-check
+
+      - name: Lagre status hvis den endret seg
+        run: |
+          if [ -n "$(git status --porcelain state/)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add state/
+            git commit -m "Oppdater overvaakingsstatus [skip ci]"
+            git push
+          else
+            echo "Ingen statusendring -- ingenting a lagre."
+          fi

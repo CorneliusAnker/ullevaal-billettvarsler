@@ -184,6 +184,48 @@ def send_test_notification():
         return False
 
 
+def ci_check(state_path):
+    """
+    Engangs-sjekk laget for GitHub Actions (eller annen cron i skyen).
+
+    Leser forrige statussetning fra en fil, sammenligner med nåværende, varsler
+    ved endring (via de aktive kanalene — typisk ntfy i skyen), og skriver ny
+    status tilbake til fila. Returnerer True hvis status endret seg.
+
+    Tilstanden ligger i fil fordi hver cron-kjøring er en ny, ren prosess som
+    ikke husker forrige gang.
+    """
+    import os
+
+    current = fetch_status_text()
+    current_norm = current or "(statussetningen forsvant)"
+
+    previous = None
+    if os.path.exists(state_path):
+        with open(state_path, encoding="utf-8") as f:
+            previous = f.read().strip() or None
+
+    changed = False
+    if previous is None:
+        log.info("CI: ingen tidligere status — etablerer utgangspunkt: %s", current_norm)
+    elif current_norm != previous:
+        changed = True
+        log.info("CI: ENDRING  %s  ->  %s", previous, current_norm)
+        notify_change(
+            "Fotballfesten: status endret!",
+            "Statusen på billettsiden har endret seg — sjekk om salget har åpnet!"
+            f"\n\nNå: {current_norm}\n\nTrykk her: {config.URL}",
+        )
+    else:
+        log.info("CI: uendret: %s", current_norm)
+
+    # Skriv ny status tilbake (oppretter mappe ved behov).
+    os.makedirs(os.path.dirname(state_path) or ".", exist_ok=True)
+    with open(state_path, "w", encoding="utf-8") as f:
+        f.write(current_norm + "\n")
+    return changed
+
+
 def check_once():
     """Sjekk status én gang og logg resultatet (avhengig av modus)."""
     if config.ALERT_MODE == "aapning":
@@ -311,6 +353,17 @@ def main():
         action="store_true",
         help="Send et test-varsel til ntfy og avslutt.",
     )
+    parser.add_argument(
+        "--ci-check",
+        action="store_true",
+        help="Engangs-sjekk for cron/GitHub Actions: les forrige status fra fil, "
+        "varsle ved endring, skriv ny status. Avslutt.",
+    )
+    parser.add_argument(
+        "--state-file",
+        default="state/last_status.txt",
+        help="Filsti for lagret status (brukes av --ci-check).",
+    )
     args = parser.parse_args()
 
     _setup_logging()
@@ -330,6 +383,17 @@ def main():
         if config.NOTIFY_NTFY:
             ok = send_test_notification()
         sys.exit(0 if ok else 1)
+
+    if args.ci_check:
+        try:
+            ci_check(args.state_file)
+            sys.exit(0)
+        except requests.RequestException as exc:
+            log.error("Nettverksfeil: %s", exc)
+            sys.exit(1)
+        except Exception as exc:  # noqa: BLE001
+            log.error("Uventet feil: %s", exc)
+            sys.exit(1)
 
     if args.once:
         try:
