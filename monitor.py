@@ -22,6 +22,7 @@ import requests
 from bs4 import BeautifulSoup
 
 import config
+import keepawake
 import notify
 
 
@@ -282,10 +283,18 @@ def monitor_loop():
 
     _log_startup(interval)
 
-    if config.ALERT_MODE == "aapning":
-        _loop_aapning(interval)
-    else:
-        _loop_endring(interval)
+    # Hindre at maskinen sovner mens vi overvåker.
+    if config.PREVENT_SLEEP and keepawake.prevent_sleep():
+        log.info("Hindrer at PC-en sovner så lenge overvåkingen kjører.")
+
+    try:
+        if config.ALERT_MODE == "aapning":
+            _loop_aapning(interval)
+        else:
+            _loop_endring(interval)
+    finally:
+        # La maskinen sove normalt igjen ved avslutning (også ved Ctrl+C).
+        keepawake.allow_sleep()
 
 
 def main():

@@ -74,6 +74,10 @@ NOTIFY_TOAST = _flag("NOTIFY_TOAST", "true")
 # Lyd-alarm (innebygd winsound — ingen ekstra pakke).
 NOTIFY_SOUND = _flag("NOTIFY_SOUND", "true")
 
+# Hindre at PC-en sovner mens overvåkingen kjører (kun Windows). Skjermen kan
+# fortsatt slå seg av — scriptet kjører videre uansett. Nullstilles ved avslutning.
+PREVENT_SLEEP = _flag("PREVENT_SLEEP", "true")
+
 # Send også push til ntfy.sh? Av som standard — du bruker PC-varsel (toast + lyd).
 # Sett "true" igjen hvis du senere vil ha mobilvarsel via ntfy-appen.
 NOTIFY_NTFY = _flag("NOTIFY_NTFY", "false")

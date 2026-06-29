@@ -109,8 +109,10 @@ git-ignorert.
 
 ## Driftsnote
 
-PC-en må være **våken** så lenge scriptet kjører — sover maskinen, stopper
-overvåkingen. Siden målsiden er statisk, kan en skyhostet variant settes opp senere
+Scriptet ber automatisk Windows om å **holde systemet våkent** så lenge det kjører
+(`PREVENT_SLEEP` i config, på som standard) — så maskinen sovner ikke fra deg midt i
+overvåkingen. Skjermen kan fortsatt slå seg av; scriptet kjører videre uansett. Vinduet
+må likevel stå åpent. Siden målsiden er statisk, kan en skyhostet variant settes opp senere
 (f.eks. en `cron`-jobb som kjører `python monitor.py --once` hvert minutt på en liten
 server). Da slipper du å holde PC-en på.
 
