@@ -1,0 +1,5 @@
+requests>=2.31
+beautifulsoup4>=4.12
+
+# Valgfritt — kun for Windows toast-popup. Lyd-alarm bruker innebygd winsound.
+winotify>=1.1 ; platform_system == "Windows"
