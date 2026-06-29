@@ -1,6 +1,9 @@
 # Logg
 monitor.log
 
+# Lokale, private innstillinger (ntfy-topic m.m.) — skal aldri til GitHub
+config_local.py
+
 # Python
 __pycache__/
 *.py[cod]

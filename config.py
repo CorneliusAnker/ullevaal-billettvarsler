@@ -85,3 +85,13 @@ NOTIFY_NTFY = _flag("NOTIFY_NTFY", "false")
 
 # --- Logging -----------------------------------------------------------------
 LOG_FILE = os.environ.get("LOG_FILE", "monitor.log")
+
+
+# --- Lokale, private overstyringer -------------------------------------------
+# Hvis det finnes en config_local.py ved siden av denne, importeres den til slutt
+# og overstyrer verdiene over. Bruk den til hemmeligheter som IKKE skal i git
+# (f.eks. ditt ntfy-topic) — config_local.py er git-ignorert.
+try:
+    from config_local import *  # noqa: F401,F403
+except ImportError:
+    pass
