@@ -1,5 +1,6 @@
 name: Billettovervaaking
 
+# Overvaaker billettsiden for Fotballfesten Ullevaal 2026.
 # Kjorer i GitHubs sky slik at PC-en din ikke trenger a sta paa.
 on:
   schedule:
