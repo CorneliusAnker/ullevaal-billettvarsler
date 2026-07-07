@@ -170,6 +170,29 @@ som kjører sjekkene **hvert 5. minutt** gratis i GitHubs sky, husker forrige st
 - **Husk å skru av etterpå:** når du har fått billetter, deaktiver workflowen
   (*Actions* → *Billettovervaaking* → *⋯* → *Disable workflow*) så den ikke kjører i evig tid.
 
+### Hvis GitHub-cron-en dør: ekstern vekker via cron-job.org
+
+GitHubs scheduler har vist seg upålitelig for dette repoet (juli 2026: schedulen
+våknet aldri igjen etter en deaktivering, tross nytt filnavn/ny workflow-ID og
+av/på-syklus). Løsningen er å la en ekstern gratis cron-tjeneste **trigge workflowen
+via API** i stedet — da kjører alt som før, men uavhengig av GitHubs scheduler:
+
+1. **Lag en fin-skopet token:** [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new)
+   → *Only select repositories* → dette repoet → *Permissions* → **Actions: Read and write**
+   (ingenting annet). Sett utløpsdato. Kopier tokenet.
+2. **Lag en jobb på [cron-job.org](https://cron-job.org)** (gratis konto):
+   - URL: `https://api.github.com/repos/CorneliusAnker/ullevaal-billettvarsler/actions/workflows/billettvakt.yml/dispatches`
+   - Schedule: hvert 5. minutt
+   - Advanced → Request method **POST**, body `{"ref":"master"}`, og headers:
+     `Authorization: Bearer DITT-TOKEN`, `Accept: application/vnd.github+json`,
+     `Content-Type: application/json`
+   - Vellykket kall gir HTTP **204**. Skru på e-postvarsling ved feil, så oppdager
+     du det hvis tokenet utløper e.l.
+
+Kjøringene vises som «Manually run» på Actions-fanen (de kommer via API) — det er
+normalt. GitHub-schedulen står igjen i workflow-fila som harmløs backup;
+`concurrency`-innstillingen hindrer dobbeltkjøringer om den skulle våkne.
+
 ### En enklere cron (egen server) som alternativ
 
 Har du en alltid-på server/VPS, kan du droppe GitHub og bare legge inn i `crontab`:
