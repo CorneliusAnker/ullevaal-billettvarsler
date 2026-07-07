@@ -118,10 +118,14 @@ Vil du slippe å ha PC-en på i det hele tatt? Se neste seksjon — kjør den i 
 
 ## Kjøre i skyen (GitHub Actions) — uten at PC-en din står på
 
+> **Merk (juli 2026):** Ullevål-billettene er skaffet, så workflowen kjører nå **kun
+> Frogner-varsleren** (se egen seksjon nedenfor) pluss et daglig heartbeat-ping.
+> Ullevål-overvåkeren (`monitor.py`) kan fortsatt kjøres lokalt eller legges tilbake
+> i workflowen ved behov — oppskriften under gjelder fortsatt.
+
 Repoet inneholder en ferdig workflow ([`.github/workflows/monitor.yml`](.github/workflows/monitor.yml))
-som kjører `python monitor.py --ci-check` **hvert 5. minutt** gratis i GitHubs sky.
-Den husker forrige status i fila `state/last_status.txt` (committes automatisk) og
-varsler via **ntfy** når statussetningen endrer seg.
+som kjører sjekkene **hvert 5. minutt** gratis i GitHubs sky, husker forrige status i
+`state/`-filer (committes automatisk) og varsler via **ntfy** ved endring.
 
 > ⚠️ I skyen finnes ingen skjerm eller høyttaler — så toast og lyd funker *ikke* der.
 > Du **må** bruke ntfy (mobil-app eller bare `https://ntfy.sh/DITT-TOPIC` i en
@@ -221,9 +225,9 @@ bruker samme `NTFY_TOPIC`-secret. PC-versjonen er raskere (2,5 min); kjør gjern
 eller GitHub slutter å fire schedulen) — **uteblir livstegnet en hel dag, sjekk
 Actions-fanen.** Stillhet betyr altså *ikke* at alt er OK; det daglige pinget gjør.
 
-**Når du har fått billetter:** stopp PC-scriptet, og fjern/kommenter ut
-«Sjekk Frogner fanpark»-steget i workflowen (eller deaktiver hele workflowen hvis
-Ullevål-overvåkingen også er ferdig).
+**Når du har fått billetter:** stopp PC-scriptet og deaktiver workflowen
+(*Actions* → *Billettovervaaking* → *⋯* → *Disable workflow*). Da stopper også
+heartbeat-pinget — det er forventet.
 
 ## Feilsøking
 

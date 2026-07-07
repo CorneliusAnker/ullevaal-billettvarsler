@@ -1,7 +1,8 @@
 name: Billettovervaaking
 
-# Overvaaker billettsiden for Fotballfesten Ullevaal 2026.
+# Overvaaker Frogner-billettene (Norge vs England, kvartfinale 11. juli 2026).
 # Kjorer i GitHubs sky slik at PC-en din ikke trenger a sta paa.
+# (Ullevaal-sjekken er fjernet -- de billettene er i boks.)
 on:
   schedule:
     # Hvert 5. minutt. (GitHub tillater ikke tettere enn ~5 min, og kan av og til
@@ -33,22 +34,11 @@ jobs:
       - name: Installer avhengigheter
         run: pip install -r requirements.txt
 
-      - name: Sjekk billettstatus
+      - name: Sjekk Frogner fanpark (Norge vs England)
         env:
           # NTFY_TOPIC settes som en "Secret" i repo-innstillingene (se README).
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           # I skyen finnes ingen skjerm/hoyttaler -> kun ntfy.
-          NOTIFY_NTFY: "true"
-          NOTIFY_TOAST: "false"
-          NOTIFY_SOUND: "false"
-        run: python monitor.py --ci-check
-
-      - name: Sjekk Frogner fanpark (Norge vs England)
-        # Kjores selv om steget over feiler, sa en enkelt nettverksglipp ikke
-        # stopper Frogner-sjekken (og omvendt).
-        if: always()
-        env:
-          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           NOTIFY_NTFY: "true"
           NOTIFY_TOAST: "false"
           NOTIFY_SOUND: "false"
@@ -58,9 +48,9 @@ jobs:
       - name: Daglig heartbeat (dodmannsknapp)
         # Sender ETT lavprioritets ntfy-ping per dag som bevis paa at cron-en
         # faktisk kjorer. Uteblir pinget en hel dag -> sjekk Actions-fanen.
-        # Ligger i samme workflow som sjekkene med vilje: lever heartbeatet,
-        # lever overvaakingen.
-        if: always()
+        # Kjorer med vilje KUN naar Frogner-sjekken over lyktes: pinget skal
+        # bety "en vellykket sjekk har faktisk kjort i dag", ikke bare
+        # "workflowen startet".
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: |
@@ -71,7 +61,7 @@ jobs:
               -H "Title: Overvaakingen lever" \
               -H "Priority: min" \
               -H "Tags: green_circle" \
-              -d "Daglig livstegn fra skyovervaakingen (Ullevaal + Frogner). Uteblir dette en hel dag: sjekk Actions-fanen paa GitHub." \
+              -d "Daglig livstegn fra Frogner-overvaakingen i skyen. Uteblir dette en hel dag: sjekk Actions-fanen paa GitHub." \
               "https://ntfy.sh/$NTFY_TOPIC" > /dev/null; then
               echo "$today" > state/last_heartbeat.txt
               echo "Heartbeat sendt."
