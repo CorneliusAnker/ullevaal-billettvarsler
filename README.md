@@ -123,7 +123,7 @@ Vil du slippe å ha PC-en på i det hele tatt? Se neste seksjon — kjør den i 
 > Ullevål-overvåkeren (`monitor.py`) kan fortsatt kjøres lokalt eller legges tilbake
 > i workflowen ved behov — oppskriften under gjelder fortsatt.
 
-Repoet inneholder en ferdig workflow ([`.github/workflows/monitor.yml`](.github/workflows/monitor.yml))
+Repoet inneholder en ferdig workflow ([`.github/workflows/billettvakt.yml`](.github/workflows/billettvakt.yml))
 som kjører sjekkene **hvert 5. minutt** gratis i GitHubs sky, husker forrige status i
 `state/`-filer (committes automatisk) og varsler via **ntfy** ved endring.
 
@@ -216,7 +216,7 @@ Logger til konsoll + `fanpark_monitor.log`.
 ### Skydrift
 
 Frogner-sjekken kjører også automatisk i den eksisterende GitHub Actions-workflowen
-([`monitor.yml`](.github/workflows/monitor.yml)) **hvert 5. minutt**, med egen statusfil
+([`billettvakt.yml`](.github/workflows/billettvakt.yml)) **hvert 5. minutt**, med egen statusfil
 (`state/fanpark_state_ci.json`) som committes automatisk. Ingen ekstra oppsett — den
 bruker samme `NTFY_TOPIC`-secret. PC-versjonen er raskere (2,5 min); kjør gjerne begge.
 

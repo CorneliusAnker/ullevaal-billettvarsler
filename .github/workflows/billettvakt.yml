@@ -5,9 +5,12 @@ name: Billettovervaaking
 # (Ullevaal-sjekken er fjernet -- de billettene er i boks.)
 on:
   schedule:
-    # Hvert 5. minutt. (GitHub tillater ikke tettere enn ~5 min, og kan av og til
-    # forsinke planlagte jobber noen minutter under hoy last.)
-    - cron: "*/5 * * * *"
+    # Hvert 5. minutt, med offset (:02, :07, :12 ...). GitHub anbefaler aa unngaa
+    # "runde" minutter (:00, :05) der lasten er hoyest og planlagte jobber oftest
+    # droppes stille. Fila heter billettvakt.yml (ikke monitor.yml) med vilje:
+    # nytt filnavn = ny workflow-ID = fersk schedule-registrering hos GitHub,
+    # etter at cron-en aldri vaaknet igjen etter deaktiveringen 29. juni.
+    - cron: "2-57/5 * * * *"
   workflow_dispatch: {}   # gjor det mulig a kjore manuelt fra Actions-fanen
 
 # Ikke kjor to sjekker oppa hverandre (de deler statusfila).
