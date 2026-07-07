@@ -55,6 +55,33 @@ jobs:
         # Egen statusfil i skyen (committes under), separat fra den lokale.
         run: python fanpark_monitor.py --once --state-file state/fanpark_state_ci.json
 
+      - name: Daglig heartbeat (dodmannsknapp)
+        # Sender ETT lavprioritets ntfy-ping per dag som bevis paa at cron-en
+        # faktisk kjorer. Uteblir pinget en hel dag -> sjekk Actions-fanen.
+        # Ligger i samme workflow som sjekkene med vilje: lever heartbeatet,
+        # lever overvaakingen.
+        if: always()
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          today=$(date -u +%F)
+          last=$(cat state/last_heartbeat.txt 2>/dev/null || echo "")
+          if [ "$today" != "$last" ]; then
+            if curl -s --fail --max-time 15 \
+              -H "Title: Overvaakingen lever" \
+              -H "Priority: min" \
+              -H "Tags: green_circle" \
+              -d "Daglig livstegn fra skyovervaakingen (Ullevaal + Frogner). Uteblir dette en hel dag: sjekk Actions-fanen paa GitHub." \
+              "https://ntfy.sh/$NTFY_TOPIC" > /dev/null; then
+              echo "$today" > state/last_heartbeat.txt
+              echo "Heartbeat sendt."
+            else
+              echo "Klarte ikke sende heartbeat -- proever igjen neste kjoring."
+            fi
+          else
+            echo "Heartbeat allerede sendt i dag ($last)."
+          fi
+
       - name: Lagre status hvis den endret seg
         if: always()
         run: |

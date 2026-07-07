@@ -216,6 +216,11 @@ Frogner-sjekken kjører også automatisk i den eksisterende GitHub Actions-workf
 (`state/fanpark_state_ci.json`) som committes automatisk. Ingen ekstra oppsett — den
 bruker samme `NTFY_TOPIC`-secret. PC-versjonen er raskere (2,5 min); kjør gjerne begge.
 
+**Heartbeat (dødmannsknapp):** workflowen sender ett lavprioritets ntfy-ping per dag
+(«Overvåkingen lever»). GitHub-cron kan stoppe stille (f.eks. hvis workflowen deaktiveres,
+eller GitHub slutter å fire schedulen) — **uteblir livstegnet en hel dag, sjekk
+Actions-fanen.** Stillhet betyr altså *ikke* at alt er OK; det daglige pinget gjør.
+
 **Når du har fått billetter:** stopp PC-scriptet, og fjern/kommenter ut
 «Sjekk Frogner fanpark»-steget i workflowen (eller deaktiver hele workflowen hvis
 Ullevål-overvåkingen også er ferdig).
