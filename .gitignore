@@ -1,5 +1,10 @@
 # Logg
 monitor.log
+fanpark_monitor.log
+
+# Lokal statusfil for Frogner-varsleren. (Sky-varianten, state/fanpark_state_ci.json,
+# committes av GitHub Actions og skal IKKE ignoreres.)
+state/fanpark_state.json
 
 # Lokale, private innstillinger (ntfy-topic m.m.) — skal aldri til GitHub
 config_local.py

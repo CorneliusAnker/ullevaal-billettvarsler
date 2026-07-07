@@ -174,6 +174,52 @@ Har du en alltid-på server/VPS, kan du droppe GitHub og bare legge inn i `cront
 */5 * * * * cd /sti/til/prosjekt && NTFY_TOPIC=ditt-topic NOTIFY_NTFY=true python3 monitor.py --ci-check
 ```
 
+## Frogner-varsler (Norge vs England) — `fanpark_monitor.py`
+
+Egen, fokusert overvåker som varsler **i det øyeblikket Frogner-billettene**
+(Norge vs England, kvartfinale lør 11. juli 2026) legges ut på fanparks.fanparks.com.
+Kongens gate for samme kamp er allerede utsolgt.
+
+Den overvåker tre mål samtidig (lista `FANPARK_TARGETS` øverst i Frogner-seksjonen
+av [`config.py`](config.py) — lett å endre):
+
+| Mål | Hva den ser etter |
+|-----|-------------------|
+| `.../booking/fotballfesten-frogner-2026` | 404 → 200 **og** ekte booking-innhold («Kjøp»/«Inngangstid») |
+| `.../booking/fotballfesten-frognerstadion-2026` | samme |
+| `fotballfesten.no/frognerstadion` (catch-all) | en ny lenke mot `fanparks.fanparks.com/booking/` — fanger opp uansett slug |
+
+Varselet («**Frogner LIVE: Norge vs England**») sendes med høy prioritet til samme
+ntfy-topic som resten av prosjektet, pluss toast + lyd på PC-en. Hele varselet er
+klikkbart og åpner booking-URL-en direkte. Er booking-siden oppe, følger også
+eventuelle `/events/KODE`-lenker (enkeltkamper) og utsolgt-status med i meldingen.
+
+Den varsler **kun på selve overgangen** ikke-live → live (én gang per mål) — siste
+kjente status ligger i `state/fanpark_state.json`, så den spammer ikke.
+
+### Starte og stoppe
+
+```bash
+python fanpark_monitor.py --test    # GJØR DETTE FØRST: test-varsel + verifiser
+                                    # deteksjonen mot Kongens gate (som er live)
+python fanpark_monitor.py           # start overvåkingen (2,5 min ± jitter) — la stå
+python fanpark_monitor.py --once    # én sjekk-runde og avslutt (cron)
+```
+
+Eller dobbeltklikk **`start_fanpark.bat`**. Stopp med **Ctrl+C** (eller lukk vinduet).
+Logger til konsoll + `fanpark_monitor.log`.
+
+### Skydrift
+
+Frogner-sjekken kjører også automatisk i den eksisterende GitHub Actions-workflowen
+([`monitor.yml`](.github/workflows/monitor.yml)) **hvert 5. minutt**, med egen statusfil
+(`state/fanpark_state_ci.json`) som committes automatisk. Ingen ekstra oppsett — den
+bruker samme `NTFY_TOPIC`-secret. PC-versjonen er raskere (2,5 min); kjør gjerne begge.
+
+**Når du har fått billetter:** stopp PC-scriptet, og fjern/kommenter ut
+«Sjekk Frogner fanpark»-steget i workflowen (eller deaktiver hele workflowen hvis
+Ullevål-overvåkingen også er ferdig).
+
 ## Feilsøking
 
 **Ingen varsler kommer:**

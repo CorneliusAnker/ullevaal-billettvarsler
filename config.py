@@ -87,6 +87,66 @@ NOTIFY_NTFY = _flag("NOTIFY_NTFY", "false")
 LOG_FILE = os.environ.get("LOG_FILE", "monitor.log")
 
 
+# --- Frogner-varsler (fanpark_monitor.py) -------------------------------------
+# Egen, fokusert overvåker for Frogner (Norge vs England, kvartfinale 11. juli
+# 2026). Målene under er lette å endre — legg til/fjern rader etter behov.
+#
+# Måltyper:
+#   "direct"    – kandidat-URL som gir 404 nå og skal flippe til 200 når salget
+#                 åpner. Regnes som live først når kroppen også ser ut som en
+#                 ekte booking-side (se FANPARK_LIVE_MARKERS).
+#   "catchall"  – side som i dag IKKE lenker til fanparks-booking; varsler når
+#                 en href mot fanparks.fanparks.com/booking/ dukker opp.
+#                 "exclude": href-er som inneholder disse ordene ignoreres
+#                 (andre fanparks som alt er live og kan dukke opp i meny/footer).
+#   "reference" – kjent live side. Brukes KUN av --test til å verifisere at
+#                 200-stien og markørene fungerer. Varsler aldri.
+FANPARK_TARGETS = [
+    {
+        "name": "frogner-direkte",
+        "type": "direct",
+        "url": "https://fanparks.fanparks.com/booking/fotballfesten-frogner-2026",
+    },
+    {
+        "name": "frognerstadion-direkte",
+        "type": "direct",
+        "url": "https://fanparks.fanparks.com/booking/fotballfesten-frognerstadion-2026",
+    },
+    {
+        "name": "fotballfesten-catchall",
+        "type": "catchall",
+        "url": "https://www.fotballfesten.no/frognerstadion",
+        "exclude": ["kongensgate", "ullevaal"],
+    },
+    {
+        "name": "kongensgate-referanse",
+        "type": "reference",
+        "url": "https://fanparks.fanparks.com/booking/fotballfesten-kongensgate-2026",
+    },
+]
+
+# En "direct"-side regnes som ekte booking-side når minst ett av disse ordene
+# finnes i sideteksten (case-insensitivt). Verifisert mot Kongens gate-siden.
+FANPARK_LIVE_MARKERS = ["kjøp", "inngangstid"]
+
+# Nøkkelord som identifiserer selve kampen på booking-siden (bonus-info i varselet).
+FANPARK_MATCH_KEYWORDS = ["norge", "england"]
+
+# Sekunder mellom hver sjekk-runde, pluss/minus tilfeldig jitter. MIN_INTERVAL
+# over gjelder også her — ikke hamre serveren.
+FANPARK_INTERVAL = int(os.environ.get("FANPARK_INTERVAL", "150"))
+FANPARK_JITTER = int(os.environ.get("FANPARK_JITTER", "30"))
+
+# Antall forsøk per henting ved nettverksfeil (med økende ventetid mellom).
+FANPARK_RETRIES = int(os.environ.get("FANPARK_RETRIES", "3"))
+
+# Statusfil (JSON) med siste kjente status per mål — gjør scriptet idempotent
+# så det bare varsler på selve overgangen ikke-live -> live.
+FANPARK_STATE_FILE = os.environ.get("FANPARK_STATE_FILE", "state/fanpark_state.json")
+
+FANPARK_LOG_FILE = os.environ.get("FANPARK_LOG_FILE", "fanpark_monitor.log")
+
+
 # --- Lokale, private overstyringer -------------------------------------------
 # Hvis det finnes en config_local.py ved siden av denne, importeres den til slutt
 # og overstyrer verdiene over. Bruk den til hemmeligheter som IKKE skal i git

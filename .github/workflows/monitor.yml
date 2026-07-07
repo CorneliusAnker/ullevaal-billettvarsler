@@ -43,7 +43,20 @@ jobs:
           NOTIFY_SOUND: "false"
         run: python monitor.py --ci-check
 
+      - name: Sjekk Frogner fanpark (Norge vs England)
+        # Kjores selv om steget over feiler, sa en enkelt nettverksglipp ikke
+        # stopper Frogner-sjekken (og omvendt).
+        if: always()
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NOTIFY_NTFY: "true"
+          NOTIFY_TOAST: "false"
+          NOTIFY_SOUND: "false"
+        # Egen statusfil i skyen (committes under), separat fra den lokale.
+        run: python fanpark_monitor.py --once --state-file state/fanpark_state_ci.json
+
       - name: Lagre status hvis den endret seg
+        if: always()
         run: |
           if [ -n "$(git status --porcelain state/)" ]; then
             git config user.name "github-actions[bot]"
