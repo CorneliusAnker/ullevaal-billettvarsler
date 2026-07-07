@@ -215,6 +215,7 @@ av [`config.py`](config.py) — lett å endre):
 | `.../booking/fotballfesten-frogner-2026` | 404 → 200 **og** ekte booking-innhold («Kjøp»/«Inngangstid») |
 | `.../booking/fotballfesten-frognerstadion-2026` | samme |
 | `fotballfesten.no/frognerstadion` (catch-all) | en ny lenke mot `fanparks.fanparks.com/booking/` — fanger opp uansett slug |
+| `fotballfesten.no/frognerstadion` (tekstvakt) | **enhver endring** i synlig sidetekst (f.eks. at «Billetter kommer snart» byttes ut) — kan pipe på uviktige endringer, men fanger forvarsler før booking-lenken finnes |
 
 Varselet («**Frogner LIVE: Norge vs England**») sendes med høy prioritet til samme
 ntfy-topic som resten av prosjektet, pluss toast + lyd på PC-en. Hele varselet er

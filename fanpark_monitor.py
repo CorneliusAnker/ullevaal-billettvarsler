@@ -24,6 +24,7 @@ Kjøring:
 """
 
 import argparse
+import difflib
 import json
 import logging
 import os
@@ -150,6 +151,93 @@ def check_target(target):
     if target["type"] == "catchall":
         return check_catchall(target)
     raise ValueError(f"Ukjent måltype: {target['type']}")
+
+
+# --- Tekstvakt: varsle ved enhver endring i synlig sidetekst ---------------------
+def fetch_visible_text(url):
+    """
+    Hent siden og returner normalisert, synlig tekst. Script/style/noscript
+    strippes FØR tekstuttrekket — slike blokker inneholder ofte tilfeldige
+    tokens per forespørsel og ville gitt falsk alarm hver runde.
+    Kaster requests.RequestException ved nettverksfeil/ikke-200.
+    """
+    resp = fetch(url)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+    for tag in soup(["script", "style", "noscript"]):
+        tag.decompose()
+    text = soup.get_text(" ", strip=True)
+    return re.sub(r"\s+", " ", text)
+
+
+def diff_snippet(old, new, max_len=500):
+    """Kort, ord-basert oppsummering av hva som forsvant (-) og kom til (+)."""
+    old_w, new_w = old.split(), new.split()
+    parts = []
+    for op, i1, i2, j1, j2 in difflib.SequenceMatcher(None, old_w, new_w).get_opcodes():
+        if op in ("delete", "replace"):
+            parts.append("- " + " ".join(old_w[i1:i2][:30]))
+        if op in ("insert", "replace"):
+            parts.append("+ " + " ".join(new_w[j1:j2][:30]))
+    snippet = "\n".join(parts)
+    if len(snippet) > max_len:
+        snippet = snippet[:max_len] + " ..."
+    return snippet or "(fant ikke konkret diff)"
+
+
+def notify_text_change(target, diff):
+    """Vaktbikkje-varsel: landingssiden endret seg (uten at booking-lenke fantes)."""
+    title = "Frogner: landingssiden endret seg"
+    message = (
+        f"Teksten på {target['url']} har endret seg — sjekk om billettinfoen "
+        "er oppdatert!\n\nEndringer:\n" + diff
+    )
+    notify.notify_local(
+        title,
+        message,
+        url=target["url"],
+        do_toast=config.NOTIFY_TOAST,
+        do_sound=config.NOTIFY_SOUND,
+    )
+    if config.NOTIFY_NTFY:
+        try:
+            send_ntfy(title, message, target["url"], priority="high", tags="eyes")
+        except requests.RequestException as exc:
+            log.error("Klarte ikke sende ntfy push-varsel: %s", exc)
+
+
+def run_textwatch(target, state):
+    """
+    Sjekk et textwatch-mål: varsle ved enhver endring i synlig sidetekst siden
+    forrige runde. Første runde etablerer bare utgangspunktet. Returnerer True
+    hvis state ble endret.
+    """
+    name = target["name"]
+    try:
+        text = fetch_visible_text(target["url"])
+    except requests.RequestException as exc:
+        log.error("Nettverksfeil for %s (beholder forrige tekst): %s", name, exc)
+        return False
+    except Exception as exc:  # noqa: BLE001
+        log.error("Uventet feil for %s (beholder forrige tekst): %s", name, exc)
+        return False
+
+    prev = state.get(name, {}).get("text")
+    if prev is None:
+        log.info("Tekstvakt %s: etablerer utgangspunkt (%d tegn).", name, len(text))
+    elif text != prev:
+        log.info("Tekstvakt %s: ENDRING oppdaget!", name)
+        diff = diff_snippet(prev, text)
+        for line in diff.splitlines():
+            log.info("  %s", line)
+        notify_text_change(target, diff)
+    else:
+        log.info("Uendret (%s): sidetekst uforandret (%d tegn)", name, len(text))
+
+    if state.get(name, {}).get("text") != text:
+        state[name] = {"text": text}
+        return True
+    return False
 
 
 # --- Bonus: kampinfo fra booking-siden ------------------------------------------
@@ -281,6 +369,12 @@ def run_checks(state_path):
     for target in config.FANPARK_TARGETS:
         if target["type"] == "reference":
             continue  # brukes kun av --test
+
+        if target["type"] == "textwatch":
+            if run_textwatch(target, state):
+                changed = True
+            time.sleep(random.uniform(1.0, 2.5))
+            continue
 
         name = target["name"]
         try:

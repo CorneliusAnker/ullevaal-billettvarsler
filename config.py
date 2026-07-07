@@ -101,6 +101,9 @@ LOG_FILE = os.environ.get("LOG_FILE", "monitor.log")
 #                 (andre fanparks som alt er live og kan dukke opp i meny/footer).
 #   "reference" – kjent live side. Brukes KUN av --test til å verifisere at
 #                 200-stien og markørene fungerer. Varsler aldri.
+#   "textwatch" – vaktbikkje: varsler ved ENHVER endring i synlig sidetekst
+#                 (f.eks. at "Billetter kommer snart" byttes ut) — også før en
+#                 booking-lenke finnes. Kan pipe på uviktige endringer.
 FANPARK_TARGETS = [
     {
         "name": "frogner-direkte",
@@ -117,6 +120,11 @@ FANPARK_TARGETS = [
         "type": "catchall",
         "url": "https://www.fotballfesten.no/frognerstadion",
         "exclude": ["kongensgate", "ullevaal"],
+    },
+    {
+        "name": "frognerstadion-tekstvakt",
+        "type": "textwatch",
+        "url": "https://www.fotballfesten.no/frognerstadion",
     },
     {
         "name": "kongensgate-referanse",
