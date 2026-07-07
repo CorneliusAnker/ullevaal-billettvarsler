@@ -1,0 +1,14 @@
+{
+  "frogner-direkte": {
+    "live": false,
+    "booking_url": null
+  },
+  "frognerstadion-direkte": {
+    "live": false,
+    "booking_url": null
+  },
+  "fotballfesten-catchall": {
+    "live": false,
+    "booking_url": null
+  }
+}
