@@ -127,6 +127,14 @@ FANPARK_TARGETS = [
         "url": "https://www.fotballfesten.no/frognerstadion",
     },
     {
+        # Returbillett-vakt: booking-siden er live, men viser "ingen kamper
+        # tilgjengelig" etter at alt ble utsolgt paa sekunder 9. juli. Enhver
+        # tekstendring her (returer, restsalg, nytt slipp) skal varsle.
+        "name": "frogner-booking-tekstvakt",
+        "type": "textwatch",
+        "url": "https://fanparks.fanparks.com/booking/fotballfesten-frogner-2026",
+    },
+    {
         "name": "kongensgate-referanse",
         "type": "reference",
         "url": "https://fanparks.fanparks.com/booking/fotballfesten-kongensgate-2026",
